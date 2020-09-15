@@ -1,18 +1,20 @@
+require("dotenv").config();
 const bodyParser = require("body-parser");
 const express = require("express");
 const app = express();
 const MongoClient = require("mongodb").MongoClient;
-const uri = process.env.CUSTOMCONNSTR_mongo;
+const uri = process.env.CUSTOMCONNSTR_MONGO;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
-
-app.listen(3000, function () {
-  console.log("listening on 3000");
+app.set("view engine", "ejs");
+app.listen(process.env.PORT, function () {
+  console.log("listening on " + process.env.PORT);
 });
+app.use(bodyParser.urlencoded({ extended: true }));
+
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
   client.connect(function (err, db) {
     const cursor = client
       .db("testdb")
@@ -21,10 +23,11 @@ app.get("/", (req, res) => {
       .toArray()
       .then((results) => {
         console.log(results);
+        res.render("index.ejs", { quotes: results });
       });
   });
 });
-app.use(bodyParser.urlencoded({ extended: true }));
+
 app.post("/quotes", (req, res) => {
   client.connect(function (err, db) {
     const collection = client.db("testdb").collection("testcollection");
